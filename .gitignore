@@ -25,3 +25,4 @@ ENV/**
 venv
 env
 ENV
+PatentData.json
