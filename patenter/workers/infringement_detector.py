@@ -3,7 +3,8 @@ import logging
 from langchain_openai import ChatOpenAI
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain.agents import create_agent
-from langchain_core.prompts import ChatPromptTemplate, ChatPromptValue
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompt_values import ChatPromptValue
 from pydantic import BaseModel
 
 from patenter.models.patents import PatentModel
