@@ -3,12 +3,14 @@ from celery.result import AsyncResult
 
 from fastapi import APIRouter, HTTPException
 from patenter.celery.tasks import detect_infringement_task
+from patenter.core.exceptions.exceptions import ResourceNotFoundException
 from patenter.routers.v1.patents.request_models import PatentRequestModel
 from patenter.routers.v1.patents.response_models import (
     DataResponse,
     PatentResponseModel,
     PatentsDataResponse,
     PatentsResponseModel,
+    PatentDataResponse,
     NewInfringementDetectionDataResponse,
     InfringementDetectionsResponseModel,
     InfringementDetectionTaskResultDataResponse,
@@ -36,6 +38,22 @@ async def get_patents() -> PatentsDataResponse:
                 PatentResponseModel.from_internal_model(patent) for patent in patents
             ]
         ),
+    )
+
+
+@router.get("/{patent_uid}", response_model=PatentDataResponse)
+async def get_patent(patent_uid: str) -> PatentDataResponse:
+    try:
+        patent = await db_connector.get_patent(patent_uid)
+    except ResourceNotFoundException:
+        raise HTTPException(
+            status_code=404, detail=f"Patent with uid {patent_uid} not found"
+        )
+
+    return PatentDataResponse(
+        success=True,
+        message="Patent retrieved successfully",
+        data=PatentResponseModel.from_internal_model(patent),
     )
 
 

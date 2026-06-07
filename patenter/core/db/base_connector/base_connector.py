@@ -10,3 +10,7 @@ class BaseDBConnector(ABC):
     @abstractmethod
     async def get_patents(self) -> list[PatentModel]:
         raise NotImplementedError
+
+    @abstractmethod
+    async def get_patent(self, patent_uid: str) -> PatentModel:
+        raise NotImplementedError

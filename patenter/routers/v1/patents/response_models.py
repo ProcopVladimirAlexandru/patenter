@@ -49,6 +49,10 @@ class PatentsDataResponse(DataResponse):
     data: PatentsResponseModel
 
 
+class PatentDataResponse(DataResponse):
+    data: PatentResponseModel
+
+
 class NewInfringementDetectionResponseModel(BaseModel):
     uid: str
 
