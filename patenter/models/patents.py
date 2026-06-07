@@ -10,8 +10,9 @@ class PatentDatesModel(BaseModel):
 
 class PatentClaimModel(BaseModel):
     number: int
-    preamble: str
-    text: str
+    preamble: str | None
+    text: str | None
+    elements: list[str]
 
 
 class PatentModel(BaseModel):
