@@ -77,13 +77,13 @@ async def detect_infringement(patent_uid: str):
         task_params_combos: list[dict] = [
             {
                 "model_uid": "o3",
-                "external_web_access": True,  # !!! TODO FIX !!!
+                "external_web_access": True,
                 "reasoning_effort": "high",
                 "search_context_size": "high",
             },
             {
                 "model_uid": "gpt-5.5",
-                "external_web_access": True,  # !!! TODO FIX !!!
+                "external_web_access": True,
                 "reasoning_effort": "high",
                 "search_context_size": "high",
             },

@@ -32,61 +32,6 @@ class InfringementDetectionsStructuredOutput(BaseModel):
     detections: list[InfringementDetectionStructuredOutput]
 
 
-TEST_PLACEHOLDER = [
-    InfringementDetectionStructuredOutput(
-        infringing_enterprise="Test Enterprise 1",
-        infringing_product="Test Product 1.1",
-        url="https://example.com/1.1",
-        per_claim_analysis=[
-            InfringementDetectionPerClaimModel(
-                claim_number=1,
-                claim_text="Test Claim Text 1.1.1",
-                infringing_text="Test Infringing Text",
-            ),
-            InfringementDetectionPerClaimModel(
-                claim_number=2,
-                claim_text="Test Claim Text 1.1.2",
-                infringing_text="Test Infringing Text",
-            ),
-        ],
-    ),
-    InfringementDetectionStructuredOutput(
-        infringing_enterprise="Test Enterprise 2",
-        infringing_product="Test Product 2.1",
-        url="https://example.com/2.1",
-        per_claim_analysis=[
-            InfringementDetectionPerClaimModel(
-                claim_number=1,
-                claim_text="Test Claim Text 2.1.1",
-                infringing_text="Test Infringing Text",
-            ),
-            InfringementDetectionPerClaimModel(
-                claim_number=2,
-                claim_text="Test Claim Text 2.1.2",
-                infringing_text="Test Infringing Text",
-            ),
-            InfringementDetectionPerClaimModel(
-                claim_number=7,
-                claim_text="Test Claim Text 2.1.7",
-                infringing_text="Test Infringing Text",
-            ),
-        ],
-    ),
-    InfringementDetectionStructuredOutput(
-        infringing_enterprise="Test Enterprise 3",
-        infringing_product="Test Product 3.1",
-        url="https://example.com/3.1",
-        per_claim_analysis=[
-            InfringementDetectionPerClaimModel(
-                claim_number=1,
-                claim_text="Test Claim Text 3.1.1",
-                infringing_text="Test Infringing Text",
-            )
-        ],
-    ),
-]
-
-
 class InfringementDetector:
     def __init__(
         self,
@@ -152,7 +97,6 @@ class InfringementDetector:
         )
         logger.debug("Will prompt model with:\n%s", prompt_value)
 
-        # !!! TODO uncomment !!!
         # opt: switch to sqlalchemy celery backend so we can store patent information together with job
         llm_results = agent.invoke(prompt_value)
 
@@ -160,9 +104,7 @@ class InfringementDetector:
             patent=self.patent,
             detections=[
                 InfringementDetectionModel(model_uid=self.model_uid, **m.model_dump())
-                # !!! TODO fix uncomment
                 for m in llm_results["structured_response"].detections
-                # for m in TEST_PLACEHOLDER
             ],
         )
 
