@@ -24,7 +24,9 @@ class LocalFileDBConnector(BaseDBConnector):
         for patent in patents:
             if patent.publication_number == patent_uid:
                 return patent
-        raise ResourceNotFoundException(f"Patent with uid {patent_uid} not found")
+        raise ResourceNotFoundException(
+            f"Patent with publication number {patent_uid} not found"
+        )
 
     @property
     def db_file_path(self):

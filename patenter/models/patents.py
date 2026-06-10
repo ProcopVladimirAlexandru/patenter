@@ -17,6 +17,7 @@ class PatentClaimModel(BaseModel):
 
 class PatentModel(BaseModel):
     publication_number: str
+    assignees: list[str]
     title: str
     abstract: str
     claims: list[PatentClaimModel]
