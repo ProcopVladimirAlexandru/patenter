@@ -24,6 +24,12 @@ export OPENAI_TEMPERATURE="0.0"
 
 ```
 
+It is recommended to use the Python version from `.python-version`.
+Install the dependencies with:
+```bash
+pip install -r requirements.txt
+```
+
 To run the server in development mode, from root of project:
 ```bash
 fastapi dev --port 8444
