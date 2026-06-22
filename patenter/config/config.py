@@ -16,11 +16,18 @@ class Config(BaseSettings):
     DB_FILE_PATH: str = Field("data/PatentData.json", alias="DB_FILE_PATH")
 
     KEYDB_CACHE_URL: str = Field("redis://localhost:6379/1", alias="KEYDB_CACHE_URL")
-    KEYDB_CELERY_BROKER_URL: str = Field("redis://localhost:6379/0", alias="KEYDB_CELERY_BROKER_URL")
+    KEYDB_CELERY_BROKER_URL: str = Field(
+        "redis://localhost:6379/0", alias="KEYDB_CELERY_BROKER_URL"
+    )
 
-    @computed_field()
+    @computed_field()  # type: ignore[misc]
     @cached_property
     def ALLOW_ORIGINS(self) -> list[str]:
-        return os.getenv("ALLOW_ORIGINS", "").split(",") if os.getenv("ALLOW_ORIGINS", None) else []
+        return (
+            os.getenv("ALLOW_ORIGINS", "").split(",")
+            if os.getenv("ALLOW_ORIGINS", None)
+            else []
+        )
+
 
 config = Config()

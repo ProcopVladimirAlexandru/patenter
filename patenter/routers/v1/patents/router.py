@@ -1,7 +1,5 @@
 import logging
 from typing import Annotated
-import atexit
-import asyncio
 
 from fastapi import APIRouter, HTTPException, Query
 from celery import group
@@ -70,8 +68,7 @@ async def get_patent(patent_uid: str):
     response_model=NewInfringementDetectionDataResponse,
 )
 async def detect_infringement(
-    patent_uid: str,
-    use_cache: Annotated[bool, Query(...)] = True
+    patent_uid: str, use_cache: Annotated[bool, Query(...)] = True
 ):
     if use_cache:
         cached_result: str | None = None
@@ -84,9 +81,13 @@ async def detect_infringement(
             return NewInfringementDetectionDataResponse(
                 success=True,
                 message="Patent received successfully. Will attempt to detect infringement...",
-                data=NewInfringementDetectionResponseModel(uid=cached_result,),
+                data=NewInfringementDetectionResponseModel(
+                    uid=cached_result,
+                ),
             )
-        logger.info(f"No cached result found for patent {patent_uid}. Will create task...")
+        logger.info(
+            f"No cached result found for patent {patent_uid}. Will create task..."
+        )
 
     try:
         patent: PatentModel = await db_connector.get_patent(patent_uid)

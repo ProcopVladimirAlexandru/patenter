@@ -1,3 +1,4 @@
+from typing import Any
 from contextlib import asynccontextmanager
 
 import redis.asyncio as redis
@@ -8,7 +9,9 @@ from patenter.core.cache.base_connector.base_connector import BaseCacheConnector
 class KeyDBConnector(BaseCacheConnector):
     def __init__(self, url: str, decode_responses: bool = True):
         self._url: str = url
-        self._pool = redis.ConnectionPool.from_url(url, decode_responses=decode_responses)
+        self._pool = redis.ConnectionPool.from_url(
+            url, decode_responses=decode_responses
+        )
 
     @asynccontextmanager
     async def _get_client(self) -> redis.Redis:
