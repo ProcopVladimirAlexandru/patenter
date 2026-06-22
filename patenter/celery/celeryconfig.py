@@ -1,5 +1,8 @@
-broker_url = "redis://localhost:6379/0"
-result_backend = "redis://localhost:6379/0"
+from patenter.config.config import config
+
+
+broker_url = config.KEYDB_CELERY_BROKER_URL
+result_backend = config.KEYDB_CELERY_BROKER_URL
 broker_transport_options = {"visibility_timeout": 43200}
 result_backend_transport_options = {"visibility_timeout": 43200}
 visibility_timeout = 43200

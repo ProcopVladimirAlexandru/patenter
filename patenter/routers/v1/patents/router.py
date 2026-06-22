@@ -1,7 +1,9 @@
 import logging
+from typing import Annotated
+import atexit
+import asyncio
 
-
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from celery import group
 from celery.result import GroupResult
 from celery import states as celery_states
@@ -23,10 +25,13 @@ from patenter.config.config import config
 from patenter.models.infringement_detections import InfringementDetectionsModel
 from patenter.models.patents import PatentModel
 from patenter.core.db.base_connector.base_connector import BaseDBConnector
+from patenter.core.cache.keydb_connector.connector import KeyDBConnector
+from patenter.core.cache.base_connector.base_connector import BaseCacheConnector
 
 
 router = APIRouter(prefix="/api/v1/patents", tags=["patents"])
 db_connector: BaseDBConnector = LocalFileDBConnector(db_file_path=config.DB_FILE_PATH)
+cache_connector: BaseCacheConnector = KeyDBConnector(url=config.KEYDB_CACHE_URL)
 logger = logging.getLogger(__name__)
 
 
@@ -64,7 +69,25 @@ async def get_patent(patent_uid: str):
     "/{patent_uid}/infringement_detection_task",
     response_model=NewInfringementDetectionDataResponse,
 )
-async def detect_infringement(patent_uid: str):
+async def detect_infringement(
+    patent_uid: str,
+    use_cache: Annotated[bool, Query(...)] = True
+):
+    if use_cache:
+        cached_result: str | None = None
+        try:
+            cached_result = await cache_connector.get(patent_uid)
+        except Exception as e:
+            logger.error(f"Failed to get cached result for patent {patent_uid}: {e}")
+        if cached_result:
+            logger.info(f"Returning cached result for patent {patent_uid}")
+            return NewInfringementDetectionDataResponse(
+                success=True,
+                message="Patent received successfully. Will attempt to detect infringement...",
+                data=NewInfringementDetectionResponseModel(uid=cached_result,),
+            )
+        logger.info(f"No cached result found for patent {patent_uid}. Will create task...")
+
     try:
         patent: PatentModel = await db_connector.get_patent(patent_uid)
     except ResourceNotFoundException:
@@ -76,13 +99,13 @@ async def detect_infringement(patent_uid: str):
         # TODO type this
         task_params_combos: list[dict] = [
             {
-                "model_uid": "o3",
+                "model_uid": "gpt-5.5",
                 "external_web_access": True,
                 "reasoning_effort": "high",
                 "search_context_size": "high",
             },
             {
-                "model_uid": "gpt-5.5",
+                "model_uid": "o3",
                 "external_web_access": True,
                 "reasoning_effort": "high",
                 "search_context_size": "high",
@@ -113,11 +136,15 @@ async def detect_infringement(patent_uid: str):
 
 
 @router.get(
-    "/infringement_detection_task/{task_id}",
+    "/{patent_uid}/infringement_detection_task/{task_uid}",
     response_model=InfringementDetectionTaskResultDataResponse,
 )
-async def get_infringement_detection_task(task_id: str):
-    restored_group_result: GroupResult | None = GroupResult.restore(id=task_id)
+async def get_infringement_detection_task(
+    patent_uid: str,
+    task_uid: str,
+    use_cache: Annotated[bool, Query(...)] = True,
+):
+    restored_group_result: GroupResult | None = GroupResult.restore(id=task_uid)
     if not restored_group_result:
         raise HTTPException(status_code=404, detail="Task not found")
 
@@ -147,7 +174,7 @@ async def get_infringement_detection_task(task_id: str):
             data=None,
         )
 
-    return InfringementDetectionTaskResultDataResponse(
+    response = InfringementDetectionTaskResultDataResponse(
         success=True,
         message="Task result",
         task_status=celery_states.SUCCESS,
@@ -155,3 +182,10 @@ async def get_infringement_detection_task(task_id: str):
             InfringementDetectionsModel(patent=patent, detections=all_detections)
         ),
     )
+    if use_cache:
+        try:
+            await cache_connector.set(patent_uid, task_uid)
+            logger.info(f"Cached result for patent {patent_uid}")
+        except Exception as e:
+            logger.error(f"Failed to cache result for patent {patent_uid}: {e}")
+    return response

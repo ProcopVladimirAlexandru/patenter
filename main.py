@@ -1,35 +1,27 @@
 import os
 import uvicorn
 import time
+import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 
 from patenter.routers.v1.patents.router import router as patents_router
+from patenter.config.config import config
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    yield
+logging.basicConfig(level=config.LOG_LEVEL)
 
-
-app = FastAPI(tags=["patenter"], lifespan=lifespan)
-
-
+app = FastAPI(tags=["patenter"])
 app.include_router(patents_router)
-
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("ALLOW_ORIGINS", "").split(",")
-    if os.getenv("ALLOW_ORIGINS", None)
-    else [],
+    allow_origins=config.ALLOW_ORIGINS,
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
-
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
