@@ -12,8 +12,8 @@ class KeyDBConnector(BaseCacheConnector):
 
     @asynccontextmanager
     async def _get_client(self) -> redis.Redis:
+        client = redis.Redis.from_pool(self._pool)
         try:
-            client = redis.Redis.from_pool(self._pool)
             yield client
         finally:
             await client.aclose()
